@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -101,7 +102,16 @@ func newDeafults(args []string, setname string) *defaultValues {
 		showVersion bool
 	)
 
-	values.locators = []string{defaultLocatorEndpoint}
+	values.locators = []string{os.Getenv("COCAINE_LOCATOR")}
+	if values.locators[0] == "" {
+		values.locators[0] = defaultLocatorEndpoint
+	}
+
+	defaultProtocol, err := strconv.Atoi(os.Getenv("COCAINE_PROTOCOL"))
+	if err != nil {
+		defaultProtocol = defaultProtocolVersion
+	}
+
 	values.debug = strings.ToUpper(os.Getenv("DEBUG")) == "DEBUG"
 
 	flagSet := flag.NewFlagSet(setname, flag.ContinueOnError)
@@ -109,7 +119,7 @@ func newDeafults(args []string, setname string) *defaultValues {
 	flagSet.StringVar(&values.appName, "app", "gostandalone", "application name")
 	flagSet.StringVar(&values.endpoint, "endpoint", "", "unix socket path to connect to the Cocaine")
 	flagSet.Var(&values.locators, "locator", "default endpoints of locators")
-	flagSet.IntVar(&values.protocol, "protocol", defaultProtocolVersion, "protocol version")
+	flagSet.IntVar(&values.protocol, "protocol", defaultProtocol, "protocol version")
 	flagSet.StringVar(&values.uuid, "uuid", "", "UUID")
 	flagSet.BoolVar(&showVersion, "showcocaineversion", false, "print framework version")
 	flagSet.Parse(args)
